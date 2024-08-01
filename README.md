@@ -9,7 +9,7 @@ This plugin helps out for the economy.
 
 Currently the plugin supports for databases
  - `Json` support local storage
- - `MongoDB` support local and atlas instances (Next Update)
+ - `MongoDB` support local and atlas instances
 
 (If you need any help, contact me on Exiled or in DM)
 ## For Developers
