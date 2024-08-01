@@ -18,6 +18,9 @@
         {
             Exiled.Events.Handlers.Player.Verified -= OnJoin;
             Exiled.Events.Handlers.Player.Left -= OnQuit;
+
+            //Exiled.Events Support
+            EventHandlerUtils.RemoveEventHandlers();
         }
 
         public static void OnJoin(VerifiedEventArgs ev)

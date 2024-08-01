@@ -44,7 +44,7 @@
 
                         if (eventArgsType != null && typeof(IPlayerEvent).IsAssignableFrom(eventArgsType))
                         {
-                            Log.Info("Working " + eventArgsType.Name);
+                            Log.Debug($"{eventArgsType.Name} is Registred");
                             EventInfo eventInfo = eventType.GetEvent("InnerEvent", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                             Delegate handler = typeof(EventHandlerUtils)
@@ -61,6 +61,31 @@
                     }
                 }
             }
+        }
+
+        public static void RemoveEventHandlers()
+        {
+            if (!isHandlerAdded) return;
+
+            for (int i = 0; i < _dynamicHandlers.Count; i++)
+            {
+                Tuple<EventInfo, Delegate> tuple = _dynamicHandlers[i];
+                EventInfo eventInfo = tuple.Item1;
+                Delegate handler = tuple.Item2;
+
+                if (eventInfo.DeclaringType != null)
+                {
+                    MethodInfo removeMethod = eventInfo.DeclaringType.GetMethod($"remove_{eventInfo.Name}", BindingFlags.Instance | BindingFlags.NonPublic);
+                    removeMethod.Invoke(null, new object[] { handler });
+                }
+                else
+                {
+                    MethodInfo removeMethod = eventInfo.GetRemoveMethod(true);
+                    removeMethod.Invoke(null, new[] { handler });
+                }
+                _dynamicHandlers.Remove(tuple);
+            }
+            isHandlerAdded = false;
         }
 
         public static void MessageHandler<T>(T ev) where T : IExiledEvent

@@ -295,6 +295,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Command\Admin\EcoCommand.cs" />
+    <Compile Include="Command\Admin\EcoTakeCommand.cs" />
+    <Compile Include="Command\Admin\EcoGiveCommand.cs" />
     <Compile Include="Command\BalanceCommand.cs" />
     <Compile Include="Database\Config\DBConfig.cs" />
     <Compile Include="Database\Config\EconomyConfig.cs" />
