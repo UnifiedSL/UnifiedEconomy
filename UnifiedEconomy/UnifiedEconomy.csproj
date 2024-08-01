@@ -303,6 +303,7 @@
     <Compile Include="Database\PlayerData.cs" />
     <Compile Include="Database\UEDatabase.cs" />
     <Compile Include="EventHandler.cs" />
+    <Compile Include="Helpers\Events\EventHandlerUtils.cs" />
     <Compile Include="Helpers\Extension\PlayerExtension.cs" />
     <Compile Include="Helpers\UEUtils.cs" />
     <Compile Include="Integration\ScriptedEvents\ScriptedEventsIntegration.cs" />

@@ -43,9 +43,8 @@
                     if (Database.ContainsKey(playerId))
                     {
                         Database.Remove(playerId);
-                        var deleteResult = _playerDataCollection.DeleteOne(pd => pd.Id == playerId);
-                        Log.Debug($"Removed player {playerId} from cache and database.");
-                        return deleteResult.DeletedCount > 0;
+                        Log.Debug($"Removed player {playerId} from cache");
+                        return true;
                     }
                     else
                     {
@@ -146,28 +145,24 @@
             {
                 var playerId = player.UserId;
 
-                // Check if the player exists in the database
-                var existingPlayerData = _playerDataCollection.Find(pd => pd.Id == playerId).FirstOrDefault();
+                // Ensure the data has the correct ID
+                data.Id = playerId;
 
-                if (existingPlayerData != null)
+                var updateResult = _playerDataCollection.ReplaceOne(
+                    pd => pd.Id == playerId,
+                    data,
+                    new ReplaceOptions { IsUpsert = true }
+                );
+
+                if (updateResult.MatchedCount > 0 || updateResult.UpsertedId != null)
                 {
-                    var updateResult = _playerDataCollection.ReplaceOne(pd => pd.Id == playerId, data);
-
-                    if (updateResult.ModifiedCount > 0)
-                    {
-                        Database[playerId] = data;
-                        Log.Debug($"Updated player {playerId} data in database and cache.");
-                        return true;
-                    }
-                    else
-                    {
-                        Log.Warn($"Failed to update player {playerId} data. No documents modified.");
-                        return false;
-                    }
+                    Database[playerId] = data;
+                    Log.Debug($"Updated player {playerId} data in database and cache.");
+                    return true;
                 }
                 else
                 {
-                    Log.Warn($"Player with ID {playerId} not found in the database.");
+                    Log.Warn($"Failed to update player {playerId} data. No documents modified.");
                     return false;
                 }
             }

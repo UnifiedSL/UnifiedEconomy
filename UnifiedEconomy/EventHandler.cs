@@ -1,6 +1,7 @@
 ﻿namespace UnifiedEconomy
 {
     using Exiled.Events.EventArgs.Player;
+    using UnifiedEconomy.Helpers.Events;
 
     public static class EventHandler
     {
@@ -8,6 +9,9 @@
         {
             Exiled.Events.Handlers.Player.Verified += OnJoin;
             Exiled.Events.Handlers.Player.Left += OnQuit;
+
+            //Exiled.Events Support
+            EventHandlerUtils.AddEventHandlers();
         }
 
         public static void UnsubscribeEvents()

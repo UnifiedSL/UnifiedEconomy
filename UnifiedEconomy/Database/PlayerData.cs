@@ -1,4 +1,7 @@
-﻿namespace UnifiedEconomy.Database
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+
+namespace UnifiedEconomy.Database
 {
     /// <summary>
     /// General class for all the databases.
@@ -8,6 +11,8 @@
         /// <summary>
         /// Gets or sets the player's balance.
         /// </summary>
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public string Id { get; set; }
 
         /// <summary>
