@@ -22,7 +22,7 @@ player.AddBalance(10f);
 player.RemoveBalance(10f);
 ```
 
-## For ScriptedEvents
+## For ScriptedEvents (Currently Disabled)
 
 Methods added for Scripted Events are
 ```yaml

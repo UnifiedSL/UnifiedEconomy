@@ -25,16 +25,15 @@
 
             if (!File.Exists(_filePath))
             {
-                File.WriteAllText(_filePath, "{}");
+                File.WriteAllText(_filePath, "[]");
             }
 
             var database = ReadDatabase();
             foreach (var entry in database)
             {
-                Database[entry.Key] = entry.Value;
+                Database[entry.Id] = entry;
             }
         }
-
 
         /// <summary>
         /// Saves a user to the JSON database.
@@ -50,19 +49,19 @@
 
                 if (remove)
                 {
-                    // Remove player data from cache
+                    // Remove player data from cache and JSON file
                     if (Database.ContainsKey(playerId))
                     {
-                        Log.Debug($"Removed player {playerId} from cache.");
+                        Database.Remove(playerId);
+                        WriteDatabase(Database.Values);
+                        Log.Debug($"Removed player {playerId} from cache and JSON file.");
+                        return true;
                     }
                     else
                     {
                         Log.Warn($"Player with ID {playerId} not found in the cache for removal.");
+                        return false;
                     }
-
-                    // Save the updated cache to the JSON file
-                    WriteDatabase(Database);
-                    return true;
                 }
                 else
                 {
@@ -77,7 +76,8 @@
                     {
                         // Player is not in the cache; check the JSON file
                         var fileData = ReadDatabase();
-                        if (fileData.TryGetValue(playerId, out var playerData))
+                        var playerData = fileData.Find(pd => pd.Id == playerId);
+                        if (playerData != null)
                         {
                             // Load data from the JSON file into the cache
                             Database[playerId] = playerData;
@@ -88,16 +88,18 @@
                             // New player, create new data
                             playerData = new PlayerData
                             {
-                                Balance = 100.0f, // Example balance, replace with actual data
+                                Id = playerId,
+                                Balance = UEMain.Singleton.Config.Economy.StartupMoney,
                             };
 
                             Database[playerId] = playerData;
-                            Log.Debug($"Added new player {playerId} to cache.");
+                            fileData.Add(playerData);
+                            WriteDatabase(fileData);
+                            Log.Debug($"Added new player {playerId} to JSON file.");
                         }
 
                         return true;
                     }
-
                 }
             }
             catch (Exception ex)
@@ -126,14 +128,16 @@
 
                 // If not in cache, check the JSON file
                 var fileData = ReadDatabase();
-                if (fileData.TryGetValue(playerId, out data))
+                var playerData = fileData.Find(pd => pd.Id == playerId);
+                if (playerData != null)
                 {
                     // Update cache with data from JSON file
-                    Database[playerId] = data;
+                    Database[playerId] = playerData;
                     Log.Debug($"Loaded player {playerId} data from JSON file into cache.");
-                    return data;
+                    return playerData;
                 }
 
+                Log.Warn($"Player with ID {playerId} not found in the database.");
                 return null;
             }
             catch (Exception ex)
@@ -158,7 +162,8 @@
                 if (Database.ContainsKey(playerId))
                 {
                     Database[playerId] = data;
-                    Log.Debug($"Updated player {playerId} data in cache.");
+                    WriteDatabase(Database.Values);
+                    Log.Debug($"Updated player {playerId} data in cache and JSON file.");
                     return true;
                 }
                 else
@@ -174,21 +179,21 @@
             }
         }
 
-        private Dictionary<string, PlayerData> ReadDatabase()
+        private List<PlayerData> ReadDatabase()
         {
             try
             {
                 var json = File.ReadAllText(_filePath);
-                return JsonConvert.DeserializeObject<Dictionary<string, PlayerData>>(json) ?? new Dictionary<string, PlayerData>();
+                return JsonConvert.DeserializeObject<List<PlayerData>>(json) ?? new List<PlayerData>();
             }
             catch (Exception ex)
             {
                 Log.Error($"Failed to read database: {ex.Message}");
-                return new Dictionary<string, PlayerData>();
+                return new List<PlayerData>();
             }
         }
 
-        private void WriteDatabase(Dictionary<string, PlayerData> database)
+        private void WriteDatabase(IEnumerable<PlayerData> database)
         {
             try
             {

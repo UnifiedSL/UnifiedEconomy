@@ -17,6 +17,9 @@
         public static UEDatabase CurrentDatabase = null;
         public static UEMain Singleton { get; private set; }
 
+        public override string Name => "UnifiedEconomy";
+        public override string Author => "UnifiedSL";
+
         /// <inheritdoc/>
         public override void OnEnabled()
         {

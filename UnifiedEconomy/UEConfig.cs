@@ -19,8 +19,13 @@
         public bool Debug { get; set; } = false;
 
         /// <summary>
-        /// Database Main Config
+        /// Gets or sets Database Main Config.
         /// </summary>
         public DBConfig Database { get; set; } = new ();
+
+        /// <summary>
+        /// Gets or sets main Economy settings.
+        /// </summary>
+        public EconomyConfig Economy { get; set; } = new();
     }
 }
