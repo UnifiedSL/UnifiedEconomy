@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using Exiled.API.Enums;
     using Exiled.API.Features;
     using UnifiedEconomy.Database;
     using UnifiedEconomy.Helpers;
@@ -26,6 +27,8 @@
 
         public override string Author => "UnifiedSL";
 
+        public override PluginPriority Priority => PluginPriority.First;
+
         /// <inheritdoc/>
         public override void OnEnabled()
         {
@@ -42,7 +45,7 @@
 
                 if (registeredDatabase.ContainsKey(db.Id))
                 {
-                    Log.Warn("The plugin is trying to registering a database with the same Id as another one");
+                    ServerConsole.AddLog("[UnifiedEconomy] The plugin is trying to registering a database with the same Id as another one", ConsoleColor.Red);
                     continue;
                 }
 

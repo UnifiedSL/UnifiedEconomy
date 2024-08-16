@@ -5,9 +5,11 @@
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
+    using Amazon.Runtime.Internal.Util;
     using Exiled.API.Features;
     using Exiled.Loader;
     using UnifiedEconomy.Database;
+    using UnifiedEconomy.Helpers;
     using UnifiedEconomy.Helpers.Extension;
 
     public static class ScriptedEventsIntegration
@@ -92,7 +94,7 @@
             }
             catch (Exception e)
             {
-                Log.Error($"{e.Source} - {e.GetType().FullName} error: {e.Message}");
+                ServerConsole.AddLog($"[UnifiedEconomy] {e.Source} - {e.GetType().FullName} error: {e.Message}", ConsoleColor.DarkRed);
             }
         }
 
@@ -104,7 +106,7 @@
         {
             if (!CanInvoke)
             {
-                Log.Warn("SE integration: Scripted Events is either not present or outdated. Ignore this message if you're not using Scripted Events.");
+                ServerConsole.AddLog($"[UnifiedEconomy] SE integration: Scripted Events is either not present or outdated. Ignore this message if you're not using Scripted Events.", ConsoleColor.Red);
                 return;
             }
 
@@ -112,12 +114,12 @@
             while (!IsModuleLoaded)
             {
                 tries++;
-                Log.Debug("ScriptedEvents is not yet loaded: Retrying in 1s");
+                UEUtils.Debug("ScriptedEvents is not yet loaded: Retrying in 1s");
                 Task.Run(async () => await Task.Delay(1000)).Wait();
 
                 if (tries > 10)
                 {
-                    Log.Error("ScriptedEvents integration error: ScriptedEvents' ScriptModule has not initialized.");
+                    ServerConsole.AddLog($"[UnifiedEconomy] ScriptedEvents integration error: ScriptedEvents' ScriptModule has not initialized.", ConsoleColor.Red);
                     return;
                 }
             }

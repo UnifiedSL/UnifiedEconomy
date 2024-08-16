@@ -21,7 +21,7 @@
 
             if (eventsAssembly == null)
             {
-                Log.Warn($"Exiled.Events not found. Skipping AddEventHandlers.");
+                ServerConsole.AddLog($"[UnifiedEconomy] Exiled.Events not found. Skipping AddEventHandlers.", ConsoleColor.Red);
                 return;
             }
 
@@ -42,7 +42,7 @@
 
                         if (eventArgsType != null && typeof(IPlayerEvent).IsAssignableFrom(eventArgsType))
                         {
-                            Log.Debug($"{eventArgsType.Name} is Registred");
+                            UEUtils.Debug($"{eventArgsType.Name} is Registred");
                             EventInfo eventInfo = eventType.GetEvent("InnerEvent", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                             Delegate handler = typeof(EventHandlerUtils)
@@ -99,12 +99,12 @@
 
             IPlayerEvent playerevent = (IPlayerEvent)ev;
 
-            Log.Debug($"{eventname} is going off");
+            UEUtils.Debug($"{eventname} is going off");
 
             if (UEMain.Singleton.Config.Economy.EventMoney.TryGetValue(eventname, out float coins))
             {
                 playerevent.Player.AddBalance(coins);
-                Log.Debug($"Added balance to {playerevent.Player.Nickname} +{coins}");
+                UEUtils.Debug($"Added balance to {playerevent.Player.Nickname} +{coins}");
             }
         }
     }

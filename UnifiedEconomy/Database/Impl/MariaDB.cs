@@ -4,6 +4,7 @@
     using Exiled.API.Features;
     using MySql.Data.MySqlClient;
     using Newtonsoft.Json;
+    using UnifiedEconomy.Helpers;
 
     public class MariaDB : UEDatabase
     {
@@ -59,7 +60,7 @@
                     }
                     else
                     {
-                        Log.Warn($"Player with ID {playerId} not found in the cache for removal.");
+                        ServerConsole.AddLog($"[UnifiedEconomy] Player with ID {playerId} not found in the cache for removal.", ConsoleColor.DarkRed);
                         return false;
                     }
                 }
@@ -67,7 +68,7 @@
                 {
                     if (Database.ContainsKey(playerId))
                     {
-                        Log.Debug($"Player {playerId} already exists in cache. No changes made.");
+                        UEUtils.Debug($"Player {playerId} already exists in cache. No changes made.");
                         return true;
                     }
                     else
@@ -84,7 +85,7 @@
                                 Balance = reader.GetFloat("Balance"),
                             };
                             Database[playerId] = playerData;
-                            Log.Debug($"Loaded player {playerId} data from MariaDB into cache.");
+                            UEUtils.Debug($"Loaded player {playerId} data from MariaDB into cache.");
                         }
                         else
                         {
@@ -101,7 +102,7 @@
                             insertCommand.Parameters.AddWithValue("@Id", playerId);
                             insertCommand.Parameters.AddWithValue("@Balance", playerData.Balance);
                             insertCommand.ExecuteNonQuery();
-                            Log.Debug($"Added new player {playerId} to database.");
+                            UEUtils.Debug($"Added new player {playerId} to database.");
                         }
 
                         return true;
@@ -110,7 +111,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to save user: {ex.Message}");
+                ServerConsole.AddLog($"[UnifiedEconomy] Failed to save user: {ex.Message}", ConsoleColor.DarkRed);
                 return false;
             }
         }
@@ -143,16 +144,16 @@
                         Balance = reader.GetFloat("Balance"),
                     };
                     Database[playerId] = data;
-                    Log.Debug($"Loaded player {playerId} data from MariaDB into cache.");
+                    UEUtils.Debug($"Loaded player {playerId} data from MariaDB into cache.");
                     return data;
                 }
 
-                Log.Warn($"Player with ID {playerId} not found in the database.");
+                ServerConsole.AddLog($"[UnifiedEconomy] Player with ID {playerId} not found in the database.", ConsoleColor.Red);
                 return null;
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to read user: {ex.Message}");
+                ServerConsole.AddLog($"[UnifiedEconomy] Failed to read user: {ex.Message}", ConsoleColor.DarkRed);
                 return null;
             }
         }
@@ -178,18 +179,18 @@
                 if (rowsAffected > 0)
                 {
                     Database[playerId] = data;
-                    Log.Debug($"Updated player {playerId} data in database and cache.");
+                    UEUtils.Debug($"Updated player {playerId} data in database and cache.");
                     return true;
                 }
                 else
                 {
-                    Log.Warn($"Failed to update player {playerId} data. No documents modified.");
+                    ServerConsole.AddLog($"[UnifiedEconomy] Failed to update player {playerId} data. No documents modified.", ConsoleColor.Red);
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to update user: {ex.Message}");
+                ServerConsole.AddLog($"[UnifiedEconomy] Failed to update user: {ex.Message}", ConsoleColor.DarkRed);
                 return false;
             }
         }

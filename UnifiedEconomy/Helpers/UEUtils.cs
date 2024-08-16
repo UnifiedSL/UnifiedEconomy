@@ -7,6 +7,17 @@
 
     public static class UEUtils
     {
+
+        public static void Debug(string message)
+        {
+            if (!UEMain.Singleton.Config.Debug)
+            {
+                return;
+            }
+
+            ServerConsole.AddLog($"[UnifiedEconomy] {message}.", ConsoleColor.Green);
+        }
+
         public static List<Type> GetDerivedClasses<TBase>()
         {
             return Assembly.GetAssembly(typeof(TBase))

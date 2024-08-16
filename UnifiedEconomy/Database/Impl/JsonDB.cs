@@ -5,6 +5,7 @@
     using System.IO;
     using Exiled.API.Features;
     using Newtonsoft.Json;
+    using UnifiedEconomy.Helpers;
 
     public class JsonDB : UEDatabase
     {
@@ -54,12 +55,12 @@
                     {
                         Database.Remove(playerId);
                         WriteDatabase(Database.Values);
-                        Log.Debug($"Removed player {playerId} from cache and JSON file.");
+                        UEUtils.Debug($"Removed player {playerId} from cache and JSON file.");
                         return true;
                     }
                     else
                     {
-                        Log.Warn($"Player with ID {playerId} not found in the cache for removal.");
+                        ServerConsole.AddLog($"[UnifiedEconomy] Player with ID {playerId} not found in the cache for removal.", ConsoleColor.Red);
                         return false;
                     }
                 }
@@ -69,7 +70,7 @@
                     if (Database.ContainsKey(playerId))
                     {
                         // Player already exists, no need to add or modify
-                        Log.Debug($"Player {playerId} already exists in cache. No changes made.");
+                        UEUtils.Debug($"Player {playerId} already exists in cache. No changes made.");
                         return true;
                     }
                     else
@@ -81,7 +82,7 @@
                         {
                             // Load data from the JSON file into the cache
                             Database[playerId] = playerData;
-                            Log.Debug($"Loaded player {playerId} data from JSON file into cache.");
+                            UEUtils.Debug($"Loaded player {playerId} data from JSON file into cache.");
                         }
                         else
                         {
@@ -95,7 +96,7 @@
                             Database[playerId] = playerData;
                             fileData.Add(playerData);
                             WriteDatabase(fileData);
-                            Log.Debug($"Added new player {playerId} to JSON file.");
+                            UEUtils.Debug($"Added new player {playerId} to JSON file.");
                         }
 
                         return true;
@@ -104,7 +105,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to save user: {ex.Message}");
+                ServerConsole.AddLog($"[UnifiedEconomy] Failed to save user: {ex.Message}", ConsoleColor.DarkRed);
                 return false;
             }
         }
@@ -133,16 +134,16 @@
                 {
                     // Update cache with data from JSON file
                     Database[playerId] = playerData;
-                    Log.Debug($"Loaded player {playerId} data from JSON file into cache.");
+                    UEUtils.Debug($"Loaded player {playerId} data from JSON file into cache.");
                     return playerData;
                 }
 
-                Log.Warn($"Player with ID {playerId} not found in the database.");
+                ServerConsole.AddLog($"[UnifiedEconomy] Player with ID {playerId} not found in the database.", ConsoleColor.Red);
                 return null;
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to read user: {ex.Message}");
+                ServerConsole.AddLog($"[UnifiedEconomy] Failed to read user: {ex.Message}", ConsoleColor.DarkRed);
                 return null;
             }
         }
@@ -163,12 +164,12 @@
                 {
                     Database[playerId] = data;
                     WriteDatabase(Database.Values);
-                    Log.Debug($"Updated player {playerId} data in cache and JSON file.");
+                    UEUtils.Debug($"Updated player {playerId} data in cache and JSON file.");
                     return true;
                 }
                 else
                 {
-                    Log.Warn($"Player with ID {playerId} not found in the database.");
+                    ServerConsole.AddLog($"[UnifiedEconomy] Player with ID {playerId} not found in the database.", ConsoleColor.Red);
                     return false;
                 }
             }
@@ -188,7 +189,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to read database: {ex.Message}");
+                ServerConsole.AddLog($"[UnifiedEconomy] Failed to read database: {ex.Message}", ConsoleColor.DarkRed);
                 return new List<PlayerData>();
             }
         }
@@ -199,11 +200,11 @@
             {
                 var json = JsonConvert.SerializeObject(database, Formatting.Indented);
                 File.WriteAllText(filePath, json);
-                Log.Debug("Database written to file successfully.");
+                UEUtils.Debug("Database written to file successfully.");
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to write database: {ex.Message}");
+                ServerConsole.AddLog($"[UnifiedEconomy] Failed to write database: {ex.Message}", ConsoleColor.DarkRed);
             }
         }
     }
