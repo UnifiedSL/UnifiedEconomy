@@ -1,14 +1,14 @@
 ﻿namespace UnifiedEconomy.Database.Impl
 {
-    using MySql.Data.MySqlClient;
     using System;
     using Exiled.API.Features;
+    using MySql.Data.MySqlClient;
     using Newtonsoft.Json;
 
     public class MariaDB : UEDatabase
     {
-        private string _connectionString;
-        private MySqlConnection _connection;
+        private string connectionString;
+        private MySqlConnection connection;
 
         /// <summary>
         /// Gets or sets the database id.
@@ -24,17 +24,17 @@
             var uri = new Uri(connectionString);
             var userInfo = uri.UserInfo.Split(':');
 
-            _connectionString = $"server={uri.Host};port={uri.Port};database={uri.AbsolutePath.TrimStart('/')};uid={userInfo[0]};pwd={userInfo[1]};";
+            this.connectionString = $"server={uri.Host};port={uri.Port};database={uri.AbsolutePath.TrimStart('/')};uid={userInfo[0]};pwd={userInfo[1]};";
 
-            _connection = new MySqlConnection(_connectionString);
-            _connection.Open();
+            connection = new MySqlConnection(this.connectionString);
+            connection.Open();
 
             var createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS PlayerData (
                     Id VARCHAR(255) PRIMARY KEY,
                     Balance FLOAT
                 );";
-            using var command = new MySqlCommand(createTableQuery, _connection);
+            using var command = new MySqlCommand(createTableQuery, connection);
             command.ExecuteNonQuery();
         }
 
@@ -73,7 +73,7 @@
                     else
                     {
                         var selectQuery = "SELECT * FROM PlayerData WHERE Id = @Id;";
-                        using var selectCommand = new MySqlCommand(selectQuery, _connection);
+                        using var selectCommand = new MySqlCommand(selectQuery, connection);
                         selectCommand.Parameters.AddWithValue("@Id", playerId);
                         using var reader = selectCommand.ExecuteReader();
                         if (reader.Read())
@@ -81,7 +81,7 @@
                             var playerData = new PlayerData
                             {
                                 Id = reader.GetString("Id"),
-                                Balance = reader.GetFloat("Balance")
+                                Balance = reader.GetFloat("Balance"),
                             };
                             Database[playerId] = playerData;
                             Log.Debug($"Loaded player {playerId} data from MariaDB into cache.");
@@ -97,7 +97,7 @@
                             Database[playerId] = playerData;
                             reader.Close(); // Ensure the reader is closed before inserting
                             var insertQuery = "INSERT INTO PlayerData (Id, Balance) VALUES (@Id, @Balance);";
-                            using var insertCommand = new MySqlCommand(insertQuery, _connection);
+                            using var insertCommand = new MySqlCommand(insertQuery, connection);
                             insertCommand.Parameters.AddWithValue("@Id", playerId);
                             insertCommand.Parameters.AddWithValue("@Balance", playerData.Balance);
                             insertCommand.ExecuteNonQuery();
@@ -132,7 +132,7 @@
                 }
 
                 var selectQuery = "SELECT * FROM PlayerData WHERE Id = @Id;";
-                using var selectCommand = new MySqlCommand(selectQuery, _connection);
+                using var selectCommand = new MySqlCommand(selectQuery, connection);
                 selectCommand.Parameters.AddWithValue("@Id", playerId);
                 using var reader = selectCommand.ExecuteReader();
                 if (reader.Read())
@@ -140,7 +140,7 @@
                     data = new PlayerData
                     {
                         Id = reader.GetString("Id"),
-                        Balance = reader.GetFloat("Balance")
+                        Balance = reader.GetFloat("Balance"),
                     };
                     Database[playerId] = data;
                     Log.Debug($"Loaded player {playerId} data from MariaDB into cache.");
@@ -170,7 +170,7 @@
                 var playerId = player.UserId;
 
                 var updateQuery = "UPDATE PlayerData SET Balance = @Balance WHERE Id = @Id;";
-                using var updateCommand = new MySqlCommand(updateQuery, _connection);
+                using var updateCommand = new MySqlCommand(updateQuery, connection);
                 updateCommand.Parameters.AddWithValue("@Id", playerId);
                 updateCommand.Parameters.AddWithValue("@Balance", data.Balance);
                 var rowsAffected = updateCommand.ExecuteNonQuery();

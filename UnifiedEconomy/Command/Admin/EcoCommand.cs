@@ -1,9 +1,7 @@
-﻿using CommandSystem;
-using System.Collections.Generic;
-using System;
-
-namespace UnifiedEconomy.Command.Admin
+﻿namespace UnifiedEconomy.Command.Admin
 {
+    using System;
+    using CommandSystem;
 
     /// <summary>
     /// The main parent command.

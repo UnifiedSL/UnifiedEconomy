@@ -6,7 +6,6 @@
 
     public class DBConfig
     {
-
         [Description("Database Id to use")]
         public string DatabaseId { get; set; } = "Json";
 

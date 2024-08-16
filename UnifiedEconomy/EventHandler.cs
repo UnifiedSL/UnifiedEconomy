@@ -10,7 +10,6 @@
             Exiled.Events.Handlers.Player.Verified += OnJoin;
             Exiled.Events.Handlers.Player.Left += OnQuit;
 
-            //Exiled.Events Support
             EventHandlerUtils.AddEventHandlers();
         }
 
@@ -19,7 +18,6 @@
             Exiled.Events.Handlers.Player.Verified -= OnJoin;
             Exiled.Events.Handlers.Player.Left -= OnQuit;
 
-            //Exiled.Events Support
             EventHandlerUtils.RemoveEventHandlers();
         }
 

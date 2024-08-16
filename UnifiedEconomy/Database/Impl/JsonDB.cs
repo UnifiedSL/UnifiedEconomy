@@ -8,7 +8,7 @@
 
     public class JsonDB : UEDatabase
     {
-        private string _filePath;
+        private string filePath;
 
         /// <summary>
         /// Gets or sets the database id.
@@ -21,11 +21,11 @@
         /// <param name="connectionString">The file path to the JSON database.</param>
         public override void ConnectDB(string connectionString)
         {
-            _filePath = connectionString;
+            filePath = connectionString;
 
-            if (!File.Exists(_filePath))
+            if (!File.Exists(filePath))
             {
-                File.WriteAllText(_filePath, "[]");
+                File.WriteAllText(filePath, "[]");
             }
 
             var database = ReadDatabase();
@@ -183,7 +183,7 @@
         {
             try
             {
-                var json = File.ReadAllText(_filePath);
+                var json = File.ReadAllText(filePath);
                 return JsonConvert.DeserializeObject<List<PlayerData>>(json) ?? new List<PlayerData>();
             }
             catch (Exception ex)
@@ -198,7 +198,7 @@
             try
             {
                 var json = JsonConvert.SerializeObject(database, Formatting.Indented);
-                File.WriteAllText(_filePath, json);
+                File.WriteAllText(filePath, json);
                 Log.Debug("Database written to file successfully.");
             }
             catch (Exception ex)

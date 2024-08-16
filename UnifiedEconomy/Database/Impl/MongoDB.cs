@@ -1,12 +1,12 @@
 ﻿namespace UnifiedEconomy.Database.Impl
 {
-    using global::MongoDB.Driver;
     using System;
     using Exiled.API.Features;
+    using global::MongoDB.Driver;
 
     public class MongoDB : UEDatabase
     {
-        private IMongoCollection<PlayerData> _playerDataCollection;
+        private IMongoCollection<PlayerData> playerDataCollection;
 
         /// <summary>
         /// Gets or sets the database id.
@@ -22,7 +22,7 @@
             var mongoUrl = new MongoUrl(connectionString);
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase(mongoUrl.DatabaseName);
-            _playerDataCollection = database.GetCollection<PlayerData>("PlayerData");
+            playerDataCollection = database.GetCollection<PlayerData>("PlayerData");
         }
 
         /// <summary>
@@ -64,7 +64,7 @@
                     else
                     {
                         // Player is not in the cache; check the database
-                        var playerData = _playerDataCollection.Find(pd => pd.Id == playerId).FirstOrDefault();
+                        var playerData = playerDataCollection.Find(pd => pd.Id == playerId).FirstOrDefault();
                         if (playerData != null)
                         {
                             // Load data from the database into the cache
@@ -81,7 +81,7 @@
                             };
 
                             Database[playerId] = playerData;
-                            _playerDataCollection.InsertOne(playerData);
+                            playerDataCollection.InsertOne(playerData);
                             Log.Debug($"Added new player {playerId} to database.");
                         }
 
@@ -114,7 +114,7 @@
                 }
 
                 // If not in cache, check the MongoDB
-                data = _playerDataCollection.Find(pd => pd.Id == playerId).FirstOrDefault();
+                data = playerDataCollection.Find(pd => pd.Id == playerId).FirstOrDefault();
                 if (data != null)
                 {
                     // Update cache with data from MongoDB
@@ -148,11 +148,10 @@
                 // Ensure the data has the correct ID
                 data.Id = playerId;
 
-                var updateResult = _playerDataCollection.ReplaceOne(
+                var updateResult = playerDataCollection.ReplaceOne(
                     pd => pd.Id == playerId,
                     data,
-                    new ReplaceOptions { IsUpsert = true }
-                );
+                    new ReplaceOptions { IsUpsert = true });
 
                 if (updateResult.MatchedCount > 0 || updateResult.UpsertedId != null)
                 {

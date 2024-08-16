@@ -1,8 +1,8 @@
 ﻿namespace UnifiedEconomy
 {
-    using Exiled.API.Features;
     using System;
     using System.Collections.Generic;
+    using Exiled.API.Features;
     using UnifiedEconomy.Database;
     using UnifiedEconomy.Helpers;
     using UnifiedEconomy.Integration;
@@ -12,12 +12,18 @@
     /// </summary>
     public class UEMain : Plugin<UEConfig, UETranslation>
     {
+#pragma warning disable SA1600 // Elements should be documented
+#pragma warning disable SA1401 // Fields should be private
+        public static UEDatabase CurrentDatabase = null;
+#pragma warning restore SA1401 // Fields should be private
+#pragma warning restore SA1600 // Elements should be documented
 
         private readonly Dictionary<string, UEDatabase> registeredDatabase = new();
-        public static UEDatabase CurrentDatabase = null;
+
         public static UEMain Singleton { get; private set; }
 
         public override string Name => "UnifiedEconomy";
+
         public override string Author => "UnifiedSL";
 
         /// <inheritdoc/>
@@ -48,7 +54,7 @@
 
             EventHandler.SubscribeEvents();
 
-            ScriptedEventsIntegration.AddCustomActions();
+            ScriptedEventsIntegration.RegisterCustomActions();
 
             base.OnEnabled();
         }

@@ -1,16 +1,13 @@
-﻿using CommandSystem;
-using Exiled.API.Features;
-using Exiled.Permissions.Extensions;
-using RemoteAdmin;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnifiedEconomy.Helpers.Extension;
-
-namespace UnifiedEconomy.Command.Admin
+﻿namespace UnifiedEconomy.Command.Admin
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using CommandSystem;
+    using Exiled.API.Features;
+    using Exiled.Permissions.Extensions;
+    using UnifiedEconomy.Helpers.Extension;
+
     [CommandHandler(typeof(RemoteAdminCommandHandler))]
     [CommandHandler(typeof(GameConsoleCommandHandler))]
     public class EcoGiveCommand : ICommand
@@ -26,7 +23,7 @@ namespace UnifiedEconomy.Command.Admin
         /// <inheritdoc/>
         public string Description { get; } = "Gives the specified player/s the amount of money.";
 
-        public string Permission { get; } = string.IsNullOrEmpty(UEMain.Singleton.Config.Economy.PermissionForAdminCommand) ? "" : UEMain.Singleton.Config.Economy.PermissionForAdminCommand + ".give";
+        public string Permission { get; } = string.IsNullOrEmpty(UEMain.Singleton.Config.Economy.PermissionForAdminCommand) ? string.Empty : UEMain.Singleton.Config.Economy.PermissionForAdminCommand + ".give";
 
         /// <inheritdoc/>
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
@@ -61,9 +58,18 @@ namespace UnifiedEconomy.Command.Admin
 
             List<Player> players = new();
 
-            if (playerId == -1 && arguments.At(0) == "*") players = Player.List.Where(player => !player.IsNPC && player.IsAlive).ToList();
-            else if (playerId == -1 && arguments.At(0) == "me") players.Add(Player.Get(sender));
-            else players.Add(Player.Get(playerId));
+            if (playerId == -1 && arguments.At(0) == "*")
+            {
+                players = Player.List.Where(player => !player.IsNPC && player.IsAlive).ToList();
+            }
+            else if (playerId == -1 && arguments.At(0) == "me")
+            {
+                players.Add(Player.Get(sender));
+            }
+            else
+            {
+                players.Add(Player.Get(playerId));
+            }
 
             if (players.FirstOrDefault() is null)
             {

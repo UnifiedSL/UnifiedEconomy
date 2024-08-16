@@ -1,12 +1,10 @@
 ﻿namespace UnifiedEconomy.Database.Config
 {
-    using Amazon.Runtime.Internal.Transform;
     using System.Collections.Generic;
     using System.ComponentModel;
 
     public class EconomyConfig
     {
-
         /// <summary>
         /// Gets or sets the Money the player will start with.
         /// </summary>

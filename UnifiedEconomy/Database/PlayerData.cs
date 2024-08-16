@@ -1,8 +1,8 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson;
-
-namespace UnifiedEconomy.Database
+﻿namespace UnifiedEconomy.Database
 {
+    using MongoDB.Bson;
+    using MongoDB.Bson.Serialization.Attributes;
+
     /// <summary>
     /// General class for all the databases.
     /// </summary>

@@ -1,104 +1,186 @@
-﻿using Exiled.API.Interfaces;
-using Exiled.Loader;
-using System.Reflection;
-using System;
-using System.Linq;
-using Exiled.API.Features;
-using UnifiedEconomy.Helpers.Extension;
-using UnifiedEconomy.Database;
-
-namespace UnifiedEconomy.Integration
+﻿namespace UnifiedEconomy.Integration
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
+    using System.Threading.Tasks;
+    using Exiled.API.Features;
+    using Exiled.Loader;
+    using UnifiedEconomy.Database;
+    using UnifiedEconomy.Helpers.Extension;
+
     public static class ScriptedEventsIntegration
     {
         /// <summary>
-        /// Gets the plugin representing ScriptedEvents, if it's installed.
+        /// Gets the Scripted Events API.
         /// </summary>
-        public static IPlugin<IConfig> ScriptedPlugin => Loader.Plugins.FirstOrDefault(plugin => plugin.Assembly.GetName().Name == "ScriptedEvents");
+        internal static Type API => Loader.GetPlugin("ScriptedEvents")?.Assembly?.GetType("ScriptedEvents.API.Features.ApiHelper");
 
         /// <summary>
-        /// Gets the <see cref="Assembly"/> representing ScriptedEvents, if it's installed.
+        /// Gets a value indicating whether the Scripted Evetns API is available to be used.
         /// </summary>
-        public static Assembly ScriptedAssembly => ScriptedPlugin?.Assembly ?? null;
+        internal static bool CanInvoke => API is not null && AddAction is not null && RemoveAction is not null && APIGetPlayersMethod is not null;
 
         /// <summary>
-        /// Gets a value indicating whether or not this server has Scripted Events on it.
+        /// Gets the MethodInfo for checking if the ScriptModule was loaded.
         /// </summary>
-        public static bool Enabled => ScriptedAssembly is not null;
+        internal static MethodInfo ModuleLoadedMethod => API?.GetMethod("IsModuleLoaded");
 
         /// <summary>
-        /// Gets the <see cref="Type"/> representing the "ApiHelper" class of Scripted Events.
+        /// Gets a value indicating whether the ScriptModule of Scripted Events is loaded.
         /// </summary>
-        public static Type ApiHelper => ScriptedAssembly?.GetType("ScriptedEvents.API.Features.ApiHelper");
+        internal static bool IsModuleLoaded => (bool)ModuleLoadedMethod.Invoke(null, Array.Empty<object>());
 
         /// <summary>
-        /// Wrapper method to add the action using reflection.
+        /// Gets the MethodInfo for adding a custom action.
         /// </summary>
-        /// <param name="name">The name of the action.</param>
-        /// <param name="action">The action's function/return value.</param>
-        public static void AddAction(string name, Func<string[], Tuple<bool, string>> action)
+        internal static MethodInfo AddAction => API?.GetMethod("RegisterCustomAction");
+
+        /// <summary>
+        /// Gets the MethodInfo for removing a custom action.
+        /// </summary>
+        internal static MethodInfo RemoveAction => API?.GetMethod("UnregisterCustomAction");
+
+        /// <summary>
+        /// Gets the MethodInfo for removing a custom action.
+        /// </summary>
+        internal static MethodInfo APIGetPlayersMethod => API?.GetMethod("GetPlayers");
+
+        /// <summary>
+        /// Gets a list of custom actions registered.
+        /// </summary>
+        internal static List<string> CustomActions { get; } = new();
+
+        /// <summary>
+        /// Gets the MethodInfo for getting the players from a variable.
+        /// </summary>
+        /// <param name="input">The input to process.</param>
+        /// <param name="script">The script as object.</param>
+        /// <param name="max">The number of players to return (-1 for unlimited).</param>
+        /// <returns>The list of players.</returns>
+        internal static Player[] GetPlayers(string input, object script, int max = -1)
         {
-            ApiHelper?.GetMethod("RegisterCustomAction").Invoke(null, new object[] { name, action });
+            return (Player[])APIGetPlayersMethod.Invoke(null, new[] { input, script, max });
         }
 
         /// <summary>
-        /// This method is called in <see cref="MainPlugin.OnEnabled"/> to add the actions to Scripted Events.
+        /// Registers a custom action.
         /// </summary>
-        public static void AddCustomActions()
+        /// <param name="name">The name of the action.</param>
+        /// <param name="action">The action implementation.</param>
+        /// <remarks>
+        /// Action implementation is Func<string[], Tuple<bool, string, object[]>>, where:
+        ///
+        ///   Tuple<string[], object> - the action input, where:
+        ///     string[]   - The input to the action. Usually represented by single word strings, BUT can also include multiple words in one string.
+        ///     object     - The script in which the action was ran.
+        ///
+        ///   Tuple<bool, string, object[]> - the action result, where:
+        ///     bool       - Did action execute without any errors.
+        ///     string     - The action response to the console when there was an error (can also be used when there was no error).
+        ///     object[]   - optional values to return from an action, either strings or Player[]s, anything different will result in an error.
+        /// </remarks>
+#pragma warning restore SA1629 // Documentation text should end with a period
+
+        public static void RegisterCustomAction(string name, Func<Tuple<string[], object>, Tuple<bool, string, object[]>> action)
         {
-            if (!Enabled)
+            try
+            {
+                AddAction.Invoke(null, new object[] { name, action });
+                CustomActions.Add(name);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{e.Source} - {e.GetType().FullName} error: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Registers custom actions defined in the method.
+        /// Used when plugin is enabled.
+        /// </summary>
+        public static void RegisterCustomActions()
+        {
+            if (!CanInvoke)
+            {
+                Log.Warn("SE integration: Scripted Events is either not present or outdated. Ignore this message if you're not using Scripted Events.");
+                return;
+            }
+
+            int tries = 0;
+            while (!IsModuleLoaded)
+            {
+                tries++;
+                Log.Debug("ScriptedEvents is not yet loaded: Retrying in 1s");
+                Task.Run(async () => await Task.Delay(1000)).Wait();
+
+                if (tries > 10)
+                {
+                    Log.Error("ScriptedEvents integration error: ScriptedEvents' ScriptModule has not initialized.");
+                    return;
+                }
+            }
+
+            RegisterCustomAction("UE_ADDMONEY", (Tuple<string[], object> input) =>
+            {
+                string[] arguments = input.Item1;
+                object script = input.Item2;
+
+                if (arguments.Length < 2)
+                {
+                    return new(false, "Missing argument: Player or Balance", null);
+                }
+
+                Player player = GetPlayers(arguments[0], script, 1).FirstOrDefault();
+
+                if (float.TryParse(arguments.ElementAt(1), out float balance))
+                {
+                    bool result = player.AddBalance(balance);
+                    return new(result, result ? "Successfully add the money" : "An Error Occurred", new[] { new[] { player } });
+                }
+
+                return new(true, string.Empty, null);
+            });
+
+            RegisterCustomAction("UE_MONEY", (Tuple<string[], object> input) =>
+            {
+                string[] arguments = input.Item1;
+                object script = input.Item2;
+
+                if (arguments.Length < 1)
+                {
+                    return new(false, "Missing argument: Player", null);
+                }
+
+                Player player = GetPlayers(arguments[0], script, 1).FirstOrDefault();
+
+                PlayerData result = player.GetPlayerFromDB();
+
+                if (result == null)
+                {
+                    return new(false, "An Error Occurred: Player is not registered in the database", null);
+                }
+
+                return new(true, result.Balance.ToString(), new[] { new[] { player } });
+            });
+        }
+
+        /// <summary>
+        /// Registers custom actions defined previously.
+        /// Used when plugin is disabled.
+        /// </summary>
+        public static void UnregisterCustomActions()
+        {
+            if (!CanInvoke)
             {
                 return;
             }
 
-            Func<string[], Tuple<bool, string>> addMoneyAction = (string[] arguments) =>
+            foreach (string name in CustomActions)
             {
-                if (arguments.Length < 2)
-                {
-                    return new(false, "Missing argument: Player or Balance");
-                }
-
-                if(Player.TryGet(arguments.ElementAt(0), out Player player) && float.TryParse(arguments.ElementAt(1), out float balance))
-                {
-                    bool result = player.AddBalance(balance);
-                    return new(result, result ? "Successfully add the money" : "An Error Occurred");
-                }
-
-                return new(true, string.Empty);
-            };
-
-            Func<string[], Tuple<bool, string>> getMoneyAction = (string[] arguments) =>
-            {
-                if (arguments.Length < 1)
-                {
-                    return new(false, "Missing argument: Player");
-                }
-
-                if (Player.TryGet(arguments.ElementAt(0), out Player player))
-                {
-                    PlayerData result = player.GetPlayerFromDB();
-
-                    if(result == null)
-                    {
-                        return new(false, "An Error Occurred: Player is not registered in the database");
-                    }
-
-                    return new(true, result.Balance.ToString());
-                }
-
-                return new(false, "An Error Occurred: Player not found");
-            };
-
-            AddAction("UE_ADDMONEY", addMoneyAction);
-            AddAction("UE_MONEY", getMoneyAction);
-        }
-
-        /// <summary>
-        /// This method is called in <see cref="MainPlugin.OnDisabled"/> to remove the actions from Scripted Events.
-        /// </summary>
-        public static void UnregisterCustomActions()
-        {
-            ApiHelper?.GetMethod("UnregisterCustomActions").Invoke(null, new object[] { new[] { "RR_ADDREMARK", "RR_PAUSEREPORT" } });
+                RemoveAction.Invoke(null, new object[] { name });
+            }
         }
     }
 }
