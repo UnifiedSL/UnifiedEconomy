@@ -7,7 +7,6 @@
 
     public static class UEUtils
     {
-
         public static void Debug(string message)
         {
             if (!UEMain.Singleton.Config.Debug)
