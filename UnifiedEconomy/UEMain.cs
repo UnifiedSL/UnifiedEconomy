@@ -27,8 +27,6 @@
 
         public override string Author => "UnifiedSL";
 
-        public override PluginPriority Priority => PluginPriority.First;
-
         /// <inheritdoc/>
         public override void OnEnabled()
         {
