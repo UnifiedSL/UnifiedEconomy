@@ -55,18 +55,6 @@
         internal static List<string> CustomActions { get; } = new();
 
         /// <summary>
-        /// Gets the MethodInfo for getting the players from a variable.
-        /// </summary>
-        /// <param name="input">The input to process.</param>
-        /// <param name="script">The script as object.</param>
-        /// <param name="max">The number of players to return (-1 for unlimited).</param>
-        /// <returns>The list of players.</returns>
-        internal static Player[] GetPlayers(string input, object script, int max = -1)
-        {
-            return (Player[])APIGetPlayersMethod.Invoke(null, new[] { input, script, max });
-        }
-
-        /// <summary>
         /// Registers a custom action.
         /// </summary>
         /// <param name="name">The name of the action.</param>
@@ -94,7 +82,7 @@
             }
             catch (Exception e)
             {
-                ServerConsole.AddLog($"[UnifiedEconomy] {e.Source} - {e.GetType().FullName} error: {e.Message}", ConsoleColor.DarkRed);
+                Log.Error($"{e.Source} - {e.GetType().FullName} error: {e.Message}");
             }
         }
 
@@ -102,7 +90,7 @@
         /// Registers custom actions defined in the method.
         /// Used when plugin is enabled.
         /// </summary>
-        public static void RegisterCustomActions()
+        public static async void RegisterCustomActions()
         {
             if (!CanInvoke)
             {
@@ -115,7 +103,7 @@
             {
                 tries++;
                 UEUtils.Debug("ScriptedEvents is not yet loaded: Retrying in 1s");
-                Task.Run(async () => await Task.Delay(1000)).Wait();
+                await Task.Delay(1000);
 
                 if (tries > 10)
                 {
@@ -139,7 +127,7 @@
                 if (float.TryParse(arguments.ElementAt(1), out float balance))
                 {
                     bool result = player.AddBalance(balance);
-                    return new(result, result ? "Successfully add the money" : "An Error Occurred", new[] { new[] { player } });
+                    return new(result, result ? "Successfully add the money" : "An Error Occurred", new[] { new[] { result } });
                 }
 
                 return new(true, string.Empty, null);
@@ -164,7 +152,38 @@
                     return new(false, "An Error Occurred: Player is not registered in the database", null);
                 }
 
-                return new(true, result.Balance.ToString(), new[] { new[] { player } });
+                return new(true, "Successfully returned", new[] { new[] { result.Balance } });
+            });
+
+            RegisterCustomAction("UE_ADDMONEY_PLAYERS", (Tuple<string[], object> input) =>
+            {
+                string[] arguments = input.Item1;
+                object script = input.Item2;
+
+                if (arguments.Length < 2)
+                {
+                    return new(false, "Missing argument: Player or Balance", null);
+                }
+
+                if (!float.TryParse(arguments.ElementAt(1), out float balance))
+                {
+                    return new(false, "Missing argument: Not a valid number", null);
+                }
+
+                Player[] playerlist = GetPlayers(arguments[0], script, 1);
+
+                int amount = 0;
+
+                foreach(Player player in playerlist.ToList())
+                {
+                   bool result = player.AddBalance(balance);
+                   if (result)
+                   {
+                        amount++;
+                   }
+                }
+
+                return new(true, "Successfully returned", new[] { new[] { amount } });
             });
         }
 
@@ -183,6 +202,18 @@
             {
                 RemoveAction.Invoke(null, new object[] { name });
             }
+        }
+
+        /// <summary>
+        /// Gets the MethodInfo for getting the players from a variable.
+        /// </summary>
+        /// <param name="input">The input to process.</param>
+        /// <param name="script">The script as object.</param>
+        /// <param name="max">The number of players to return (-1 for unlimited).</param>
+        /// <returns>The list of players.</returns>
+        internal static Player[] GetPlayers(string input, object script, int max = -1)
+        {
+            return (Player[])APIGetPlayersMethod.Invoke(null, new[] { input, script, max });
         }
     }
 }
