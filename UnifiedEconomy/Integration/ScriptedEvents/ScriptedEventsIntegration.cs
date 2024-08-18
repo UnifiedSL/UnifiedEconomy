@@ -132,7 +132,7 @@
                 if (float.TryParse(arguments.ElementAt(1), out float balance))
                 {
                     bool result = player.AddBalance(balance);
-                    return new(result, result ? "Successfully add the money" : "An Error Occurred", new[] { new[] { result.ToString() } });
+                    return new(result, result ? "Successfully add the money" : "An Error Occurred", new[] { result.ToString() });
                 }
 
                 return new(true, string.Empty, null);
@@ -162,7 +162,7 @@
                     return new(false, "An Error Occurred: Player is not registered in the database", null);
                 }
 
-                return new(true, "Successfully returned", new[] { new[] { result.Balance.ToString() } });
+                return new(true, "Successfully returned", new[] { result.Balance.ToString() });
             });
 
             RegisterCustomAction("UE_ADDMONEY_PLAYERS", (Tuple<string[], object> input) =>
@@ -193,7 +193,7 @@
                    }
                 }
 
-                return new(true, "Successfully returned", new[] { new[] { amount.ToString() } });
+                return new(true, "Successfully returned", new[] { amount.ToString() });
             });
         }
 
