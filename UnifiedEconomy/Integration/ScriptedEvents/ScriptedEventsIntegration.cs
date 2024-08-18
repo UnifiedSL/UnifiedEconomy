@@ -124,6 +124,11 @@
 
                 Player player = GetPlayers(arguments[0], script, 1).FirstOrDefault();
 
+                if (player == null)
+                {
+                    return new(false, "An Error Occurred: Invalid Player", null);
+                }
+
                 if (float.TryParse(arguments.ElementAt(1), out float balance))
                 {
                     bool result = player.AddBalance(balance);
@@ -144,6 +149,11 @@
                 }
 
                 Player player = GetPlayers(arguments[0], script, 1).FirstOrDefault();
+
+                if(player == null)
+                {
+                    return new(false, "An Error Occurred: Invalid Player", null);
+                }
 
                 PlayerData result = player.GetPlayerFromDB();
 
