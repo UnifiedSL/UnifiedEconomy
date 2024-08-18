@@ -27,6 +27,7 @@ player.RemoveBalance(10f);
 
 Methods added for Scripted Events are
 ```yaml
-UE_ADDMONEY <player> <money> (Adds balance to the player to remove it just add -)
-UE_MONEY <player> (Gets the money)
+UE_ADDMONEY <player> <money> (Adds balance to the player to remove it just add -) (returns a boolean)
+UE_MONEY <player> (Gets the money) (returns the balance)
+UE_ADDMONEY_PLAYERS <players> <money> (Adds balance to multiple players) (returns the amount of players the balance changed)
 ```
