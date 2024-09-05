@@ -54,7 +54,6 @@
                     if (Database.ContainsKey(playerId))
                     {
                         Database.Remove(playerId);
-                        WriteDatabase(Database.Values);
                         UEUtils.Debug($"Removed player {playerId} from cache and JSON file.");
                         return true;
                     }
@@ -69,8 +68,8 @@
                     // Check if the player exists in the cache
                     if (Database.ContainsKey(playerId))
                     {
-                        // Player already exists, no need to add or modify
-                        UEUtils.Debug($"Player {playerId} already exists in cache. No changes made.");
+                        // Player already exists, no need to add or modify the ID
+                        UEUtils.Debug($"Player {playerId} already exists in cache. No changes made to ID.");
                         return true;
                     }
                     else
@@ -86,10 +85,10 @@
                         }
                         else
                         {
-                            // New player, create new data
+                            // New player, create new data (including the ID only for the first time)
                             playerData = new PlayerData
                             {
-                                Id = playerId,
+                                Id = playerId, // ID is set here only once and never changes
                                 Balance = UEMain.Singleton.Config.Economy.StartupMoney,
                             };
 
@@ -152,7 +151,7 @@
         /// Updates the user inside the database cache.
         /// </summary>
         /// <param name="player">The player who needs to be updated.</param>
-        /// <param name="data">The data to update.</param>
+        /// <param name="data">The data to update. The ID field will not be updated.</param>
         /// <returns>If the action was successful.</returns>
         public override bool UpdateUser(Player player, PlayerData data)
         {
@@ -162,9 +161,12 @@
 
                 if (Database.ContainsKey(playerId))
                 {
+                    // Ensure the ID is not modified
+                    data.Id = playerId; // Prevent changing the ID by enforcing the current player ID
+
                     Database[playerId] = data;
                     WriteDatabase(Database.Values);
-                    UEUtils.Debug($"Updated player {playerId} data in cache and JSON file.");
+                    UEUtils.Debug($"Updated player {playerId} data in cache and JSON file (without changing ID).");
                     return true;
                 }
                 else
